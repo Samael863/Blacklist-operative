@@ -16,27 +16,34 @@
     const gameSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
     const aiSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/pad-ai.js';
 
-    fetch(gameSource, { cache: 'no-store' })
-      .then(response => {
-        if (!response.ok) throw new Error('Spiel konnte nicht geladen werden.');
-        return response.text();
+    Promise.all([
+      fetch(gameSource, {cache:'no-store'}).then(r => {
+        if (!r.ok) throw new Error('Spiel konnte nicht geladen werden.');
+        return r.text();
+      }),
+      fetch(aiSource, {cache:'no-store'}).then(r => {
+        if (!r.ok) throw new Error('PAD AI konnte nicht geladen werden.');
+        return r.text();
       })
-      .then(gameHtml => {
-        const parser = new DOMParser();
-        const gameDocument = parser.parseFromString(gameHtml, 'text/html');
-        const aiScript = gameDocument.createElement('script');
-        aiScript.src = aiSource + '?v=1';
-        aiScript.async = false;
-        gameDocument.body.appendChild(aiScript);
+    ])
+    .then(([gameHtml, aiCode]) => {
+      // PAD AI wird als Inline-Script in das vollständige Spiel eingesetzt.
+      // Dadurch funktioniert der Einbau auch dann, wenn externe Scripts beim
+      // document.write-Schritt nicht automatisch ausgeführt werden.
+      const aiTag = '<script>\\n' + aiCode.replace(/<\\/script/gi, '<\\\\/script') + '\\n<\\/script>';
+      const bodyEnd = /<\\/body\\s*>/i;
+      const finalHtml = bodyEnd.test(gameHtml)
+        ? gameHtml.replace(bodyEnd, aiTag + '</body>')
+        : gameHtml + aiTag;
 
-        document.open();
-        document.write('<!doctype html>' + gameDocument.documentElement.outerHTML);
-        document.close();
-      })
-      .catch(error => {
-        document.querySelector('.loading').innerHTML = '<div><h1>Laden fehlgeschlagen</h1><p>Das Spiel konnte nicht geladen werden.</p></div>';
-        console.error(error);
-      });
+      document.open();
+      document.write(finalHtml);
+      document.close();
+    })
+    .catch(error => {
+      document.querySelector('.loading').innerHTML = '<div><h1>Laden fehlgeschlagen</h1><p>' + error.message + '</p></div>';
+      console.error(error);
+    });
   </script>
 </body>
 </html>
