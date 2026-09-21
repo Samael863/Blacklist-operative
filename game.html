@@ -23,20 +23,26 @@
       .then(html => {
         const fixedHtml = html
           .replace(
-            "  FAUSTE:{name:\"FÄUSTE\",cost:100,req:1,mag:0,reserve:0,damage:999,cooldown:.38,speed:0,pellets:1,spread:0,desc:\"Nahkampf. Schnelle Schläge und zufällige Finisher.\",melee:true},\n  SPEER:{name:\"SPEER\",cost:1800,req:3,mag:0,reserve:0,damage:999,cooldown:.55,speed:0,pellets:1,spread:0,desc:\"Lange Reichweite mit Stößen, Sweeps und Dreh-Finishern.\",melee:true},\n  KATANA:{name:\"KATANA\",cost:3200,req:8,mag:0,reserve:0,damage:999,cooldown:.52,speed:0,pellets:1,spread:0,desc:\"Schnelle Klingenwaffe mit wechselnden Hieb-Animationen.\",melee:true},\n  MESSER:{name:\"MESSER\",cost:2400,req:5,mag:0,reserve:0,damage:999,cooldown:.44,speed:0,pellets:1,spread:0,desc:\"Kompakter Nahkampf mit schnellen Richtungswechseln.\",melee:true},\n  SCHWERT:{name:\"SCHWERT\",cost:4600,req:12,mag:0,reserve:0,damage:999,cooldown:.62,speed:0,pellets:1,spread:0,desc:\"Schwere Klinge mit breiten und kraftvollen Finishern.\",melee:true},\n  STAB:{name:\"STAB\",cost:2900,req:6,mag:0,reserve:0,damage:999,cooldown:.50,speed:0,pellets:1,spread:0,desc:\"Taktischer Stab mit Drehungen, Sweeps und Stößen.\",melee:true}",
-            "  FAUSTE:{name:\"FÄUSTE\",cost:100,req:1,mag:0,reserve:0,damage:10,cooldown:.38,speed:0,pellets:1,spread:0,desc:\"Nahkampf. Schnelle Schläge und zufällige Finisher.\",melee:true},\n  SPEER:{name:\"SPEER\",cost:1800,req:3,mag:0,reserve:0,damage:10,cooldown:.55,speed:0,pellets:1,spread:0,desc:\"Lange Reichweite mit Stößen, Sweeps und Dreh-Finishern.\",melee:true},\n  KATANA:{name:\"KATANA\",cost:3200,req:8,mag:0,reserve:0,damage:10,cooldown:.52,speed:0,pellets:1,spread:0,desc:\"Schnelle Klingenwaffe mit wechselnden Hieb-Animationen.\",melee:true},\n  MESSER:{name:\"MESSER\",cost:2400,req:5,mag:0,reserve:0,damage:10,cooldown:.44,speed:0,pellets:1,spread:0,desc:\"Kompakter Nahkampf mit schnellen Richtungswechseln.\",melee:true},\n  SCHWERT:{name:\"SCHWERT\",cost:4600,req:12,mag:0,reserve:0,damage:10,cooldown:.62,speed:0,pellets:1,spread:0,desc:\"Schwere Klinge mit breiten und kraftvollen Finishern.\",melee:true},\n  STAB:{name:\"STAB\",cost:2900,req:6,mag:0,reserve:0,damage:10,cooldown:.50,speed:0,pellets:1,spread:0,desc:\"Taktischer Stab mit Drehungen, Sweeps und Stößen.\",melee:true}"
+            "  FAUSTE:{name:\"FÄUSTE\",cost:100,req:1,mag:0,reserve:0,damage:999,cooldown:.38,speed:0,pellets:1,spread:0,desc:\"Nahkampf. Schnelle Schläge und zufällige Finisher.\",melee:true},[...]",
+            "  FAUSTE:{name:\"FÄUSTE\",cost:100,req:1,mag:0,reserve:0,damage:10,cooldown:.38,speed:0,pellets:1,spread:0,desc:\"Nahkampf. Schnelle Schläge und zufällige Finisher.\",melee:true},\[...]"
           )
           .replace(
             "        if(b.specialType && ownedSpecialAmmo.includes(b.specialType) && !e.specialEffectStarted){\n          e.hp=0;\n          e.specialType=b.specialType;\n        }",
-            "        if(b.specialType && ownedSpecialAmmo.includes(b.specialType) && !e.specialEffectStarted){\n          const specialDamage = Math.max(10, Number(b.damage) || 10);\n          e.hp = Math.max(0, e.hp - specialDamage);\n          e.specialType = b.specialType;\n        }"
+            "        if(b.specialType && ownedSpecialAmmo.includes(b.specialType) && !e.specialEffectStarted){\n          const specialDamage = Math.max(10, Number(b.damage) || 10);\n          e.hp=Math.max(0,e.hp-specialDamage);\n          e.specialType=b.specialType;\n        }"
           )
           .replace(
             "  companion.x+=(tx-companion.x)*Math.min(1,dt*7);\n  companion.y+=(ty-companion.y)*Math.min(1,dt*7);\n  companion.x=clamp(companion.x,90,world.width-90);companion.y=clamp(companion.y,390,505);",
-            "  companion.x+=(tx-companion.x)*Math.min(1,dt*7);\n  companion.y+=(ty-companion.y)*Math.min(1,dt*7);\n  if(player.hp < 35){\n    companion.alert = (companion.alert || 0) + 0.02;\n  }\n  if(enemies.some(e => Math.hypot(e.x-companion.x, e.y-companion.y) < 220)){\n    companion.alert = (companion.alert || 0) + 0.03;\n  }\n  companion.alert = Math.max(0, (companion.alert || 0) - dt * 0.5);\n  companion.x=clamp(companion.x,90,world.width-90);companion.y=clamp(companion.y,390,505);"
+            "  companion.x+=(tx-companion.x)*Math.min(1,dt*7);\n  companion.y+=(ty-companion.y)*Math.min(1,dt*7);\n  if(player.hp < 35){\n    companion.alert = (companion.alert || 0) + 0.02;\n  }\n  companion.x=clamp(companion.x,90,world.width-90);companion.y=clamp(companion.y,390,505);"
           );
 
+        // PAD AI als Overlay in die dynamisch geladene Spielseite einfügen.
+        const padAiScript = '<script src="./pad-ai.js"><\\/script>';
+        const withPadAi = fixedHtml.includes('pad-ai.js')
+          ? fixedHtml
+          : fixedHtml.replace('</body>', `${padAiScript}</body>`);
+
         document.open();
-        document.write(fixedHtml);
+        document.write(withPadAi);
         document.close();
       })
       .catch(error => {
