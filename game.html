@@ -21,7 +21,7 @@
         return response.text();
       })
       .then(html => {
-        const fixedHtml = html
+        let fixedHtml = html
           .replace(
             "  FAUSTE:{name:\"FÄUSTE\",cost:100,req:1,mag:0,reserve:0,damage:999,cooldown:.38,speed:0,pellets:1,spread:0,desc:\"Nahkampf. Schnelle Schläge und zufällige Finisher.\",melee:true},[...]",
             "  FAUSTE:{name:\"FÄUSTE\",cost:100,req:1,mag:0,reserve:0,damage:10,cooldown:.38,speed:0,pellets:1,spread:0,desc:\"Nahkampf. Schnelle Schläge und zufällige Finisher.\",melee:true},\[...]"
@@ -29,13 +29,21 @@
           .replace(
             "        if(b.specialType && ownedSpecialAmmo.includes(b.specialType) && !e.specialEffectStarted){\n          e.hp=0;\n          e.specialType=b.specialType;\n        }",
             "        if(b.specialType && ownedSpecialAmmo.includes(b.specialType) && !e.specialEffectStarted){\n          const specialDamage = Math.max(10, Number(b.damage) || 10);\n          e.hp=Math.max(0,e.hp-specialDamage);\n          e.specialType=b.specialType;\n        }"
-          )
-          .replace(
-            "  companion.x+=(tx-companion.x)*Math.min(1,dt*7);\n  companion.y+=(ty-companion.y)*Math.min(1,dt*7);\n  companion.x=clamp(companion.x,90,world.width-90);companion.y=clamp(companion.y,390,505);",
-            "  companion.x+=(tx-companion.x)*Math.min(1,dt*7);\n  companion.y+=(ty-companion.y)*Math.min(1,dt*7);\n  if(player.hp < 35){\n    companion.alert = (companion.alert || 0) + 0.02;\n  }\n  companion.x=clamp(companion.x,90,world.width-90);companion.y=clamp(companion.y,390,505);"
           );
 
-        // PAD AI als Overlay in die dynamisch geladene Spielseite einfügen.
+        // Spezialmunition deaktivieren.
+        fixedHtml = fixedHtml.replace(
+          /const\\s+specialAmmoCatalog\\s*=\\s*\\{[\\s\\S]*?\\};/,
+          'const specialAmmoCatalog={};'
+        );
+
+        // Nahkampf-Einträge aus dem Waffen-Katalog entfernen.
+        fixedHtml = fixedHtml.replace(
+          /\\s*[A-Z0-9_-]+:\\{[^{}]*?melee:true[^{}]*?\\},?/g,
+          ''
+        );
+
+        // PAD AI als Overlay einfügen.
         const padAiScript = '<script src="./pad-ai.js"><\\/script>';
         const withPadAi = fixedHtml.includes('pad-ai.js')
           ? fixedHtml
