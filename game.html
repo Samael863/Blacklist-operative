@@ -14,12 +14,21 @@
   <div class="loading"><div><h1>BLACKLIST OPERATIVE</h1><p>Spiel wird geladen …</p></div></div>
   <script>
     const source = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
+    const padAiSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/pad-ai.js';
+
     fetch(source, { cache: 'no-store' })
       .then(response => {
         if (!response.ok) throw new Error('Spiel konnte nicht geladen werden.');
         return response.text();
       })
       .then(html => {
+        // PAD AI wird in das geladene Spiel eingebunden, nicht nur in diese Laderseite.
+        const padAiTag = `<script src="${padAiSource}"><\/script>`;
+        const closingBody = /<\/body\s*>/i;
+        html = closingBody.test(html)
+          ? html.replace(closingBody, `${padAiTag}</body>`)
+          : `${html}${padAiTag}`;
+
         document.open();
         document.write(html);
         document.close();
