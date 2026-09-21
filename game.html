@@ -7,67 +7,27 @@
   <style>
     html,body{margin:0;min-height:100%;background:#05080b;color:#fff;font-family:Arial,sans-serif}
     .loading{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}
-    .loadingBox{width:min(520px,90vw)}
-    .loading h1{letter-spacing:3px;font-size:clamp(24px,6vw,42px)}
-    .loading p{color:#aeb9be;margin:10px 0 18px}
-    .progressTrack{height:18px;background:#111a1e;border:1px solid #435159;border-radius:999px;overflow:hidden;box-shadow:0 0 25px #000}
-    .progressBar{height:100%;width:0%;background:linear-gradient(90deg,#8e2025,#e75b5f,#65d7ff);transition:width .15s ease;border-radius:999px}
-    .progressLine{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:#aeb9be;font-size:12px}
-    #loadPercent{color:#fff;font-weight:bold}
+    .loading p{color:#aeb9be}
   </style>
 </head>
 <body>
-  <div class="loading"><div class="loadingBox">
-    <h1>BLACKLIST OPERATIVE</h1>
-    <p id="loadStatus">Spiel wird geladen …</p>
-    <div class="progressTrack" role="progressbar" aria-label="Spiel wird geladen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-      <div id="loadBar" class="progressBar"></div>
-    </div>
-    <div class="progressLine"><span id="loadDetail">Verbindung wird hergestellt</span><span id="loadPercent">0%</span></div>
-  </div></div>
+  <div class="loading"><div><h1>BLACKLIST OPERATIVE</h1><p>Spiel wird geladen …</p></div></div>
   <script>
-    const gameSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
-    const bar = document.getElementById('loadBar');
-    const percent = document.getElementById('loadPercent');
-    const detail = document.getElementById('loadDetail');
-    const status = document.getElementById('loadStatus');
-    const progressTrack = bar.parentElement;
-
-    function progress(value, text) {
-      value = Math.max(0, Math.min(99, Math.round(value)));
-      bar.style.width = value + '%';
-      percent.textContent = value + '%';
-      progressTrack.setAttribute('aria-valuenow', value);
-      if (text) detail.textContent = text;
-    }
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', gameSource, true);
-    xhr.onprogress = event => {
-      if (event.lengthComputable) progress(event.loaded / event.total * 96, 'Spieldatei wird übertragen');
-      else progress(35, 'Spieldatei wird übertragen');
-    };
-    xhr.onload = () => {
-      if (xhr.status < 200 || xhr.status >= 300) {
-        showError('Spieldatei konnte nicht geladen werden (' + xhr.status + ').');
-        return;
-      }
-      progress(98, 'Spiel wird gestartet');
-      setTimeout(() => {
+    const source = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
+    fetch(source, { cache: 'no-store' })
+      .then(response => {
+        if (!response.ok) throw new Error('Spiel konnte nicht geladen werden.');
+        return response.text();
+      })
+      .then(html => {
         document.open();
-        document.write(xhr.responseText);
+        document.write(html);
         document.close();
-      }, 250);
-    };
-    xhr.onerror = () => showError('Netzwerkfehler beim Laden der Spieldatei.');
-    xhr.send();
-
-    function showError(message) {
-      bar.style.background = '#b72d34';
-      progress(100, 'Fehler');
-      status.textContent = 'Laden fehlgeschlagen';
-      detail.textContent = message;
-    }
+      })
+      .catch(error => {
+        document.querySelector('.loading').innerHTML = '<div><h1>Laden fehlgeschlagen</h1><p>Das Spiel konnte nicht geladen werden.</p></div>';
+        console.error(error);
+      });
   </script>
 </body>
 </html>
