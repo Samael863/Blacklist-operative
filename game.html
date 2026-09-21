@@ -20,28 +20,31 @@
   <div class="loading"><div class="loadingBox">
     <h1>BLACKLIST OPERATIVE</h1>
     <p id="loadStatus">Spiel wird geladen …</p>
-    <div class="progressTrack"><div id="loadBar" class="progressBar"></div></div>
+    <div class="progressTrack" role="progressbar" aria-label="Spiel wird geladen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="loadBar" class="progressBar"></div>
+    </div>
     <div class="progressLine"><span id="loadDetail">Verbindung wird hergestellt</span><span id="loadPercent">0%</span></div>
   </div></div>
   <script>
     const gameSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
-    const aiSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/pad-ai.js?v=1';
     const bar = document.getElementById('loadBar');
     const percent = document.getElementById('loadPercent');
     const detail = document.getElementById('loadDetail');
     const status = document.getElementById('loadStatus');
+    const progressTrack = bar.parentElement;
 
     function progress(value, text) {
       value = Math.max(0, Math.min(99, Math.round(value)));
       bar.style.width = value + '%';
       percent.textContent = value + '%';
+      progressTrack.setAttribute('aria-valuenow', value);
       if (text) detail.textContent = text;
     }
 
     const xhr = new XMLHttpRequest();
     xhr.open('GET', gameSource, true);
     xhr.onprogress = event => {
-      if (event.lengthComputable) progress(event.loaded / event.total * 88, 'Spieldatei wird übertragen');
+      if (event.lengthComputable) progress(event.loaded / event.total * 96, 'Spieldatei wird übertragen');
       else progress(35, 'Spieldatei wird übertragen');
     };
     xhr.onload = () => {
@@ -49,17 +52,10 @@
         showError('Spieldatei konnte nicht geladen werden (' + xhr.status + ').');
         return;
       }
-      progress(90, 'PAD AI wird eingebaut');
-      let html = xhr.responseText;
-      const aiTag = '<script src="' + aiSource + '"></script>';
-      const bodyIndex = html.toLowerCase().lastIndexOf('</body>');
-      html = bodyIndex >= 0
-        ? html.slice(0, bodyIndex) + aiTag + html.slice(bodyIndex)
-        : html + aiTag;
       progress(98, 'Spiel wird gestartet');
       setTimeout(() => {
         document.open();
-        document.write(html);
+        document.write(xhr.responseText);
         document.close();
       }, 250);
     };
