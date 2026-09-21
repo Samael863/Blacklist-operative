@@ -7,43 +7,101 @@
   <style>
     html,body{margin:0;min-height:100%;background:#05080b;color:#fff;font-family:Arial,sans-serif}
     .loading{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}
-    .loading p{color:#aeb9be}
+    .loadingBox{width:min(520px,90vw)}
+    .loading h1{letter-spacing:3px;font-size:clamp(24px,6vw,42px)}
+    .loading p{color:#aeb9be;margin:10px 0 18px}
+    .progressTrack{height:18px;background:#111a1e;border:1px solid #435159;border-radius:999px;overflow:hidden;box-shadow:0 0 25px #000}
+    .progressBar{height:100%;width:0%;background:linear-gradient(90deg,#8e2025,#e75b5f,#65d7ff);transition:width .15s ease;border-radius:999px}
+    .progressLine{display:flex;justify-content:space-between;gap:12px;margin-top:9px;color:#aeb9be;font-size:12px}
+    #loadPercent{color:#fff;font-weight:bold}
   </style>
 </head>
 <body>
-  <div class="loading"><div><h1>BLACKLIST OPERATIVE</h1><p>Spiel wird geladen …</p></div></div>
+  <div class="loading">
+    <div class="loadingBox">
+      <h1>BLACKLIST OPERATIVE</h1>
+      <p id="loadStatus">Spiel wird geladen …</p>
+      <div class="progressTrack" role="progressbar" aria-label="Spiel wird geladen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="loadBar" class="progressBar"></div>
+      </div>
+      <div class="progressLine"><span id="loadDetail">Verbindung wird hergestellt</span><span id="loadPercent">0%</span></div>
+    </div>
+  </div>
   <script>
     const gameSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
     const aiSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/pad-ai.js';
+    const bar = document.getElementById('loadBar');
+    const percent = document.getElementById('loadPercent');
+    const status = document.getElementById('loadStatus');
+    const detail = document.getElementById('loadDetail');
+    const progress = bar.parentElement;
+    const loaded = { game: 0, ai: 0 };
+    const total = { game: 0, ai: 0 };
 
-    Promise.all([
-      fetch(gameSource, {cache:'no-store'}).then(r => {
-        if (!r.ok) throw new Error('Spiel konnte nicht geladen werden.');
-        return r.text();
-      }),
-      fetch(aiSource, {cache:'no-store'}).then(r => {
-        if (!r.ok) throw new Error('PAD AI konnte nicht geladen werden.');
-        return r.text();
+    function setProgress(value, message) {
+      value = Math.max(0, Math.min(99, Math.round(value)));
+      bar.style.width = value + '%';
+      percent.textContent = value + '%';
+      progress.setAttribute('aria-valuenow', value);
+      if (message) detail.textContent = message;
+    }
+
+    function updateProgress() {
+      const knownTotal = total.game + total.ai;
+      const knownLoaded = loaded.game + loaded.ai;
+      if (knownTotal > 0) {
+        setProgress((knownLoaded / knownTotal) * 92, 'Dateien werden übertragen');
+      } else {
+        const gameDone = loaded.game > 0 ? 35 : 0;
+        const aiDone = loaded.ai > 0 ? 12 : 0;
+        setProgress(Math.min(70, gameDone + aiDone), 'Dateien werden übertragen');
+      }
+    }
+
+    function loadText(url, key) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onprogress = event => {
+          loaded[key] = event.loaded;
+          if (event.lengthComputable) total[key] = event.total;
+          updateProgress();
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            loaded[key] = xhr.responseText.length;
+            if (!total[key]) total[key] = xhr.responseText.length;
+            updateProgress();
+            resolve(xhr.responseText);
+          } else reject(new Error(key === 'game' ? 'Spiel konnte nicht geladen werden.' : 'PAD AI konnte nicht geladen werden.'));
+        };
+        xhr.onerror = () => reject(new Error('Netzwerkfehler beim Laden von ' + key + '.'));
+        xhr.send();
+      });
+    }
+
+    Promise.all([loadText(gameSource, 'game'), loadText(aiSource, 'ai')])
+      .then(([gameHtml, aiCode]) => {
+        setProgress(94, 'PAD AI wird eingebaut');
+        const aiTag = '<script>\n' + aiCode.replace(/<\\/script/gi, '<\\\\/script') + '\n<\\/script>';
+        const bodyEnd = /<\\/body\\s*>/i;
+        const finalHtml = bodyEnd.test(gameHtml)
+          ? gameHtml.replace(bodyEnd, aiTag + '</body>')
+          : gameHtml + aiTag;
+        setProgress(98, 'Spiel wird gestartet');
+        setTimeout(() => {
+          document.open();
+          document.write(finalHtml);
+          document.close();
+        }, 180);
       })
-    ])
-    .then(([gameHtml, aiCode]) => {
-      // PAD AI wird als Inline-Script in das vollständige Spiel eingesetzt.
-      // Dadurch funktioniert der Einbau auch dann, wenn externe Scripts beim
-      // document.write-Schritt nicht automatisch ausgeführt werden.
-      const aiTag = '<script>\\n' + aiCode.replace(/<\\/script/gi, '<\\\\/script') + '\\n<\\/script>';
-      const bodyEnd = /<\\/body\\s*>/i;
-      const finalHtml = bodyEnd.test(gameHtml)
-        ? gameHtml.replace(bodyEnd, aiTag + '</body>')
-        : gameHtml + aiTag;
-
-      document.open();
-      document.write(finalHtml);
-      document.close();
-    })
-    .catch(error => {
-      document.querySelector('.loading').innerHTML = '<div><h1>Laden fehlgeschlagen</h1><p>' + error.message + '</p></div>';
-      console.error(error);
-    });
+      .catch(error => {
+        bar.style.background = '#b72d34';
+        setProgress(100, 'Fehler');
+        status.textContent = 'Laden fehlgeschlagen';
+        detail.textContent = error.message;
+        console.error(error);
+      });
   </script>
 </body>
 </html>
