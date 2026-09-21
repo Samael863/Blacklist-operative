@@ -13,29 +13,28 @@
 <body>
   <div class="loading"><div><h1>BLACKLIST OPERATIVE</h1><p>Spiel wird geladen …</p></div></div>
   <script>
-    const source = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
-    const padAiSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/pad-ai.js';
-    const lt = String.fromCharCode(60);
-    const scriptTag = lt + 'script src="' + padAiSource + '">' + lt + '/script' + String.fromCharCode(62);
-    const endBody = lt + '/body' + String.fromCharCode(62);
+    const gameSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/https:/Blacklist.com';
+    const aiSource = 'https://raw.githubusercontent.com/Samael863/Blacklist-operative/main/pad-ai.js';
 
-    fetch(source, { cache: 'no-store' })
+    fetch(gameSource, { cache: 'no-store' })
       .then(response => {
         if (!response.ok) throw new Error('Spiel konnte nicht geladen werden.');
         return response.text();
       })
-      .then(html => {
-        // Das Script wird als echtes script-Element in den Spielcode eingesetzt.
-        const bodyPattern = new RegExp(lt + '/body\\s*>', 'i');
-        html = bodyPattern.test(html)
-          ? html.replace(bodyPattern, scriptTag + endBody)
-          : html + scriptTag;
+      .then(gameHtml => {
+        const parser = new DOMParser();
+        const gameDocument = parser.parseFromString(gameHtml, 'text/html');
+        const aiScript = gameDocument.createElement('script');
+        aiScript.src = aiSource + '?v=1';
+        aiScript.async = false;
+        gameDocument.body.appendChild(aiScript);
+
         document.open();
-        document.write(html);
+        document.write('<!doctype html>' + gameDocument.documentElement.outerHTML);
         document.close();
       })
       .catch(error => {
-        document.querySelector('.loading').innerHTML = '<div><h1>Laden fehlgeschlagen</h1><p>Bitte die Seite neu laden oder den direkten GitHub-Link öffnen.</p></div>';
+        document.querySelector('.loading').innerHTML = '<div><h1>Laden fehlgeschlagen</h1><p>Das Spiel konnte nicht geladen werden.</p></div>';
         console.error(error);
       });
   </script>
