@@ -22,13 +22,16 @@
         return response.text();
       })
       .then(html => {
-        // PAD AI wird in das geladene Spiel eingebunden, nicht nur in diese Laderseite.
-        const padAiTag = `<script src="${padAiSource}"><\/script>`;
-        const closingBody = /<\/body\s*>/i;
-        html = closingBody.test(html)
-          ? html.replace(closingBody, `${padAiTag}</body>`)
-          : `${html}${padAiTag}`;
-
+        // Die KI wird direkt in den eigentlichen Spiel-HTML-Code eingesetzt.
+        // Dadurch bleibt die öffentliche Spiele-Adresse unverändert.
+        const injection = `
+<style id="pad-ai-fallback-style">
+#padAiToggle{position:fixed!important;right:62px!important;top:10px!important;z-index:2147483647!important;padding:9px 12px!important;border-radius:10px!important;background:#101418!important;color:#fff!important;border:1px solid #00d9ff!important;font:700 13px Arial!important;cursor:pointer!important;display:block!important}
+#padAiMic{position:fixed!important;right:10px!important;top:10px!important;z-index:2147483647!important;padding:9px 12px!important;border-radius:10px!important;background:#101418!important;color:#fff!important;border:1px solid #59636a!important;font:700 16px Arial!important;cursor:pointer!important;display:none}
+</style>
+<script src="${padAiSource}"><\\/script>`;
+        const bodyEnd = /<\\/body\\s*>/i;
+        html = bodyEnd.test(html) ? html.replace(bodyEnd, injection + '</body>') : html + injection;
         document.open();
         document.write(html);
         document.close();
