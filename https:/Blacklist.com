@@ -570,7 +570,7 @@ button{
 #shopScreen,#cutsceneScreen{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(3,6,8,.94)}
 #shopScreen .panel{width:min(900px,94vw);max-height:88vh;overflow:auto}
 .shopTop{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:14px}.credits{font-size:16px;font-weight:900;color:#e4d47a}
-.shopGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dwolfUpgrade{margin:10px 0 16px;padding:14px;background:#0a1013;border:1px solid #39484e;border-left:3px solid #c49a63;border-radius:8px}.dwolfUpgrade h3{margin:0 0 5px;font-size:16px;letter-spacing:1px}.dwolfUpgrade .upgradeSub{font-size:10px;color:#9aa6aa;line-height:1.5;margin-bottom:10px}.upgradeRow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #202a2e}.upgradeRow:first-of-type{border-top:0}.upgradeName{font-weight:800;font-size:11px}.upgradeLevel{font-size:10px;color:#c49a63}.upgradeRow button{padding:7px 9px;font-size:10px}.weaponCard{padding:14px;background:#0b1114;border:1px solid #35434a;border-radius:7px;min-height:145px}.weaponCard.equipped{border-color:#55c77e;box-shadow:0 0 18px #55c77e22}.weaponName{font-size:16px;font-weight:900;letter-spacing:1px}.weaponMeta{font-size:10px;color:#849198;line-height:1.55;margin:7px 0 12px}.weaponCard button{width:100%;padding:10px}.weaponCard button:disabled{opacity:.35}
+.shopGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dwolfUpgrade{margin:10px 0 16px;padding:14px;background:#0a1013;border:1px solid #39484e;border-left:3px solid #c49a63;border-radius:8px}.dwolfUpgrade h3{margin:0 0 5px;font-size:16px;letter-spacing:1px}.dwolfUpgrade .upgradeSub{font-size:10px;color:#9aa6aa;line-height:1.5;margin-bottom:10px}.upgradeRow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #202a2e}.upgradeRow:first-of-type{border-top:0}.upgradeName{font-weight:800;font-size:11px}.upgradeLevel{font-size:10px;color:#c49a63}.upgradeRow button{padding:7px 9px;font-size:10px}.upgradeWeaponBlock{border-top:1px solid #283338;padding:10px 0}.upgradeWeaponBlock:first-child{border-top:0}.weaponCard{padding:14px;background:#0b1114;border:1px solid #35434a;border-radius:7px;min-height:145px}.weaponCard.equipped{border-color:#55c77e;box-shadow:0 0 18px #55c77e22}.weaponName{font-size:16px;font-weight:900;letter-spacing:1px}.weaponMeta{font-size:10px;color:#849198;line-height:1.55;margin:7px 0 12px}.weaponCard button{width:100%;padding:10px}.weaponCard button:disabled{opacity:.35}
 .outfitTitle{margin:18px 0 8px;color:#aab6bb;font-size:11px;letter-spacing:2px}.outfitGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.outfitCard{padding:12px;background:#0b1114;border:1px solid #35434a;border-radius:7px}.outfitCard.equipped{border-color:#55c77e;box-shadow:0 0 18px #55c77e22}.outfitName{font-size:13px;font-weight:900}.outfitMeta{font-size:9px;color:#849198;line-height:1.5;margin:6px 0 10px}@media(max-width:700px){.outfitGrid{grid-template-columns:1fr 1fr}}
 #shopScreen{overflow:hidden !important;touch-action:auto !important;align-items:flex-start !important;padding:20px 0;box-sizing:border-box}
 #shopScreen .panel{max-height:calc(100vh - 40px);overflow-y:auto;overflow-x:hidden;touch-action:pan-y !important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:28px}
@@ -985,6 +985,7 @@ button{
     <div id="weaponProgress" style="font-size:10px;color:#7f8c92;margin:-2px 0 10px;line-height:1.5"></div>
     <div id="shopGrid" class="shopGrid"></div>
     <div id="dwolfUpgradePanel" class="dwolfUpgrade" style="display:none"></div>
+    <div id="weaponUpgradePanel" class="dwolfUpgrade" style="display:none"></div>
     <div class="outfitTitle companionSection">BEGLEITER // K9 &amp; SPECIAL</div>
     <div id="companionGrid" class="companionGrid"></div>
     <div id="companionUpgradePanel" class="companionUpgrade" style="display:none"></div>
@@ -1657,6 +1658,13 @@ let extractX=0;
 let flash=0;
 let alertTimeout;
 
+/* ZOMBIE MODE */
+let zombieMode=false;
+let zombieWave=0;
+let zombieKills=0;
+let zombieIntermission=0;
+let zombieBestWave=Math.max(0,parseInt(localStorage.getItem("blacklistZombieBestWave")||"0",10));
+
 
 /* =========================================================
    RANDOM
@@ -1704,12 +1712,11 @@ const weaponCatalog={
   NOVA:{name:"NOVA",cost:16500,req:55,mag:10,reserve:70,damage:115,cooldown:.40,speed:2450,pellets:1,spread:.004,desc:"Hochpräzise Spezialwaffe für harte Einzelziele.",special:true},
   APEX:{name:"APEX",cost:22000,req:75,mag:36,reserve:216,damage:62,cooldown:.075,speed:2200,pellets:1,spread:.010,desc:"Fortgeschrittenes Sturmgewehr für Endgame-Einsätze.",special:true},
   TEMPEST:{name:"TEMPEST",cost:30000,req:100,mag:12,reserve:96,damage:145,cooldown:.26,speed:2800,pellets:1,spread:.003,desc:"Experimentelles Präzisionssystem für extreme Reichweite.",special:true},
-  FAUSTE:{name:"FÄUSTE",cost:100,req:1,mag:0,reserve:0,damage:999,cooldown:.38,speed:0,pellets:1,spread:0,desc:"Nahkampf. Schnelle Schläge und zufällige Finisher.",melee:true},
-  SPEER:{name:"SPEER",cost:1800,req:3,mag:0,reserve:0,damage:999,cooldown:.55,speed:0,pellets:1,spread:0,desc:"Lange Reichweite mit Stößen, Sweeps und Dreh-Finishern.",melee:true},
-  KATANA:{name:"KATANA",cost:3200,req:8,mag:0,reserve:0,damage:999,cooldown:.52,speed:0,pellets:1,spread:0,desc:"Schnelle Klingenwaffe mit wechselnden Hieb-Animationen.",melee:true},
-  MESSER:{name:"MESSER",cost:2400,req:5,mag:0,reserve:0,damage:999,cooldown:.44,speed:0,pellets:1,spread:0,desc:"Kompakter Nahkampf mit schnellen Richtungswechseln.",melee:true},
-  SCHWERT:{name:"SCHWERT",cost:4600,req:12,mag:0,reserve:0,damage:999,cooldown:.62,speed:0,pellets:1,spread:0,desc:"Schwere Klinge mit breiten und kraftvollen Finishern.",melee:true},
-  STAB:{name:"STAB",cost:2900,req:6,mag:0,reserve:0,damage:999,cooldown:.50,speed:0,pellets:1,spread:0,desc:"Taktischer Stab mit Drehungen, Sweeps und Stößen.",melee:true}
+  SPEER:{name:"SPEER",cost:1800,req:3,mag:0,reserve:0,damage:17,cooldown:.55,speed:0,pellets:1,spread:0,desc:"Lange Reichweite mit Stößen, Sweeps und Dreh-Finishern.",melee:true},
+  KATANA:{name:"KATANA",cost:3200,req:8,mag:0,reserve:0,damage:17,cooldown:.52,speed:0,pellets:1,spread:0,desc:"Schnelle Klingenwaffe mit wechselnden Hieb-Animationen.",melee:true},
+  MESSER:{name:"MESSER",cost:2400,req:5,mag:0,reserve:0,damage:17,cooldown:.44,speed:0,pellets:1,spread:0,desc:"Kompakter Nahkampf mit schnellen Richtungswechseln.",melee:true},
+  SCHWERT:{name:"SCHWERT",cost:4600,req:12,mag:0,reserve:0,damage:17,cooldown:.62,speed:0,pellets:1,spread:0,desc:"Schwere Klinge mit breiten und kraftvollen Finishern.",melee:true},
+  STAB:{name:"STAB",cost:2900,req:6,mag:0,reserve:0,damage:17,cooldown:.50,speed:0,pellets:1,spread:0,desc:"Taktischer Stab mit Drehungen, Sweeps und Stößen.",melee:true}
 };
 const outfitCatalog={
   TACTICAL:{name:"TACTICAL",cost:0,desc:"Klassischer schwarzer Agentenanzug."},
@@ -1751,11 +1758,14 @@ const weaponSkinCatalog={
   REDPHASE:{name:"RED PHASE",cost:0,desc:"GEHEIM · Reaktive Einsatz-Tarnung.",color:"#6d3038",secret:true},
   DIAMONDREACTIVE:{name:"REAKTIVER DIAMANT",cost:0,desc:"LEVEL 1000 · Legendäre leuchtende Diamant-Tarnung.",color:"#9be7ee",secret:true,diamond:true}
 };
-let ownedWeapons=(()=>{try{const a=JSON.parse(localStorage.getItem("blacklistWeapons")||"[]");return Array.isArray(a)?a.map(x=>x==="SILENT"?"PISTOLE":x).filter(x=>weaponCatalog[x]):["PISTOLE"]}catch(e){return ["PISTOLE"]}})();
+let ownedWeapons=(()=>{try{const a=JSON.parse(localStorage.getItem("blacklistWeapons")||"[]");return Array.isArray(a)?a.map(x=>x==="SILENT"?"PISTOLE":x).filter(x=>weaponCatalog[x]&&x!=="FAUSTE"): ["PISTOLE"]}catch(e){return ["PISTOLE"]}})();
 if(!ownedWeapons.includes("PISTOLE"))ownedWeapons.unshift("PISTOLE");
 let equippedWeapon=localStorage.getItem("blacklistEquippedWeapon")||"PISTOLE";
 if(equippedWeapon==="SILENT")equippedWeapon="PISTOLE";
+if(equippedWeapon==="FAUSTE")equippedWeapon="PISTOLE";
 if(!weaponCatalog[equippedWeapon]||!ownedWeapons.includes(equippedWeapon))equippedWeapon="PISTOLE";
+ownedWeapons=ownedWeapons.filter(x=>x!=="FAUSTE");
+try{localStorage.setItem("blacklistWeapons",JSON.stringify(ownedWeapons));}catch(e){}
 let ownedOutfits=(()=>{try{const a=JSON.parse(localStorage.getItem("blacklistOutfits")||"[]");return Array.isArray(a)?a.filter(x=>outfitCatalog[x]):["TACTICAL"]}catch(e){return ["TACTICAL"]}})();
 if(!ownedOutfits.includes("TACTICAL"))ownedOutfits.unshift("TACTICAL");
 /* V25.6.46: Community-Skins sauber auf Kaufstatus umstellen.
@@ -1775,6 +1785,8 @@ if(!ownedWeaponSkins.includes("STANDARD"))ownedWeaponSkins.unshift("STANDARD");
 let equippedWeaponSkin=localStorage.getItem("blacklistEquippedWeaponSkin")||"STANDARD";
 if(!weaponSkinCatalog[equippedWeaponSkin]||!ownedWeaponSkins.includes(equippedWeaponSkin))equippedWeaponSkin="STANDARD";
 let dwolfUpgrades=(()=>{try{const a=JSON.parse(localStorage.getItem("blacklistDWolfUpgrades")||"{}");return {damage:Math.min(10,Math.max(0,a.damage|0)),ammo:Math.min(10,Math.max(0,a.ammo|0)),rate:Math.min(10,Math.max(0,a.rate|0))}}catch(e){return {damage:0,ammo:0,rate:0}}})();
+const upgradeableWeaponIds=Object.keys(weaponCatalog).filter(id=>id!=="D-WOLF"&&id!=="FAUSTE"&&!weaponCatalog[id].melee);
+let weaponUpgrades=(()=>{try{const a=JSON.parse(localStorage.getItem("blacklistWeaponUpgrades")||"{}");const o={};for(const id of upgradeableWeaponIds){const u=a[id]||{};o[id]={damage:Math.min(10,Math.max(0,u.damage|0)),ammo:Math.min(10,Math.max(0,u.ammo|0)),rate:Math.min(10,Math.max(0,u.rate|0))}}return o}catch(e){const o={};for(const id of upgradeableWeaponIds)o[id]={damage:0,ammo:0,rate:0};return o}})();
 let credits=parseInt(localStorage.getItem("blacklistCredits")||"0",10); if(!Number.isFinite(credits)||credits<0)credits=0;
 let playerXP=parseInt(localStorage.getItem("blacklistXP")||"0",10); if(!Number.isFinite(playerXP)||playerXP<0)playerXP=0;
 function xpForLevel(l){return 250+(l-1)*125;}
@@ -1813,11 +1825,29 @@ function weaponUnlocked(w){return getRankLevel()>=w.req;}
 // Level = unlock requirement only. Every non-free weapon must still be purchased with credits.
 function weaponCanBePurchased(w){return weaponUnlocked(w)&&!ownedWeapons.includes(w.name)&&credits>=w.cost;}
 
-function saveLoadout(){localStorage.setItem("blacklistWeapons",JSON.stringify(ownedWeapons));localStorage.setItem("blacklistOutfits",JSON.stringify(ownedOutfits));localStorage.setItem("blacklistWeaponSkins",JSON.stringify(ownedWeaponSkins));localStorage.setItem("blacklistCredits",String(credits));localStorage.setItem("blacklistXP",String(playerXP));localStorage.setItem("blacklistDWolfUpgrades",JSON.stringify(dwolfUpgrades));localStorage.setItem("blacklistCompanions",JSON.stringify(ownedCompanions));localStorage.setItem("blacklistCompanionUpgrades",JSON.stringify(companionUpgrades));localStorage.setItem("blacklistEquippedCompanion",equippedCompanion);}
+function saveLoadout(){localStorage.setItem("blacklistWeapons",JSON.stringify(ownedWeapons));localStorage.setItem("blacklistOutfits",JSON.stringify(ownedOutfits));localStorage.setItem("blacklistWeaponSkins",JSON.stringify(ownedWeaponSkins));localStorage.setItem("blacklistCredits",String(credits));localStorage.setItem("blacklistXP",String(playerXP));localStorage.setItem("blacklistDWolfUpgrades",JSON.stringify(dwolfUpgrades));localStorage.setItem("blacklistWeaponUpgrades",JSON.stringify(weaponUpgrades));localStorage.setItem("blacklistCompanions",JSON.stringify(ownedCompanions));localStorage.setItem("blacklistCompanionUpgrades",JSON.stringify(companionUpgrades));localStorage.setItem("blacklistEquippedCompanion",equippedCompanion);}
 function getWeapon(){
   const base=weaponCatalog[player.weapon]||weaponCatalog.PISTOLE;
-  if(!base.dwolf)return base;
-  const u=dwolfUpgrades;
+  if(base.melee){
+    /* Nahkampf macht exakt so viel Schaden wie der aktuell ausgerüstete D-WOLF. */
+    const dw=weaponCatalog["D-WOLF"];
+    const u=dwolfUpgrades;
+    return Object.assign({},base,{
+      damage:dw.damage+u.damage*6,
+      cooldown:Math.max(.055,base.cooldown-u.rate*.006)
+    });
+  }
+  if(base.dwolf){
+    const u=dwolfUpgrades;
+    return Object.assign({},base,{
+      damage:base.damage+u.damage*6,
+      mag:base.mag+u.ammo*3,
+      reserve:base.reserve+u.ammo*18,
+      cooldown:Math.max(.055,base.cooldown-u.rate*.006),
+      spread:base.spread
+    });
+  }
+  const u=weaponUpgrades[player.weapon]||{damage:0,ammo:0,rate:0};
   return Object.assign({},base,{
     damage:base.damage+u.damage*6,
     mag:base.mag+u.ammo*3,
@@ -1826,8 +1856,10 @@ function getWeapon(){
     spread:base.spread
   });
 }
+
 function awardCredits(n){credits+=n;saveLoadout();if(typeof updateHUD==="function")updateHUD();}
 function buyOrEquipWeapon(id){
+  if(id==="FAUSTE")return;
   const w=weaponCatalog[id]; if(!w)return;
   if(!weaponUnlocked(w)){showAlert("LEVEL "+w.req+" ERFORDERLICH","red");return;}
   if(!ownedWeapons.includes(id)){
@@ -1881,6 +1913,33 @@ function upgradeDWolf(type){
   showAlert("D-WOLF UPGRADE · "+type.toUpperCase(),"green");
   updateHUD();renderShop();
 }
+function weaponUpgradeCost(id,type){
+  const lv=(weaponUpgrades[id]&&weaponUpgrades[id][type])||0;
+  return 700+lv*550;
+}
+function upgradeWeapon(id,type){
+  const w=weaponCatalog[id]; if(!w||w.dwolf||w.melee)return;
+  if(!ownedWeapons.includes(id)){showAlert(w.name+" ZUERST KAUFEN","red");return;}
+  if(!weaponUpgrades[id])weaponUpgrades[id]={damage:0,ammo:0,rate:0};
+  if((weaponUpgrades[id][type]||0)>=10){showAlert("UPGRADE MAXIMUM ERREICHT","red");return;}
+  const cost=weaponUpgradeCost(id,type);
+  if(credits<cost){showAlert("ZU WENIG CREDITS","red");return;}
+  credits-=cost; weaponUpgrades[id][type]++; saveLoadout();
+  showAlert(w.name+" · "+type.toUpperCase()+" UPGRADE","green");
+  updateHUD(); renderShop();
+}
+function renderWeaponUpgrades(){
+  const panel=document.getElementById("weaponUpgradePanel"); if(!panel)return;
+  const owned=upgradeableWeaponIds.filter(id=>ownedWeapons.includes(id));
+  panel.style.display=owned.length?"block":"none";
+  if(!owned.length)return;
+  panel.innerHTML='<h3>🔧 WAFFEN // UPGRADES</h3><div class="upgradeSub">Jede gekaufte Schusswaffe kann dauerhaft verbessert werden. Schaden +6, Magazin +3/+18 Reserve, Feuerrate schneller. Kein One-Shot-Bonus durch Spezialmunition.</div>'+owned.map(id=>{
+    const w=weaponCatalog[id],u=weaponUpgrades[id]||{damage:0,ammo:0,rate:0};
+    const dmg= w.damage+u.damage*6, mag=w.mag+u.ammo*3, cd=Math.max(.055,w.cooldown-u.rate*.006);
+    return '<div class="upgradeWeaponBlock"><div class="upgradeName">'+w.name+' · '+dmg+' SCHADEN</div>'+
+      ['damage','ammo','rate'].map(type=>{const lv=u[type]||0,cost=weaponUpgradeCost(id,type),label=type==='damage'?'SCHADEN +6':type==='ammo'?'+3 MAG / +18 RESERVE':'FEUERRATE';const value=type==='damage'?('LV '+lv+'/10'):type==='ammo'?('LV '+lv+'/10 · MAG '+mag):('LV '+lv+'/10 · '+(60/cd).toFixed(1)+'/min');return '<div class="upgradeRow"><div><div class="upgradeName">'+label+'</div></div><div class="upgradeLevel">'+value+'</div><button '+(lv>=10||credits<cost?'disabled':'')+' onclick="upgradeWeapon(\''+id+'\',\''+type+'\')">'+(lv>=10?'MAX':'$'+cost)+'</button></div>'}).join('')+'</div>';
+  }).join('');
+}
 function renderDWolfUpgrade(){
   const panel=document.getElementById("dwolfUpgradePanel");if(!panel)return;
   const owned=ownedWeapons.includes("D-WOLF"), equipped=player&&player.weapon==="D-WOLF";
@@ -1892,7 +1951,7 @@ function renderDWolfUpgrade(){
     ["MAGAZIN / SCHUSS","ammo",w.mag,"+3 MAG · +18 RESERVE / Stufe"],
     ["FEUERRATE","rate",(60/w.cooldown).toFixed(1),"kürzere Schussverzögerung"]
   ];
-  panel.innerHTML='<h3>🐺 D-WOLF // WAFFEN-UPGRADES</h3><div class="upgradeSub">Die einzige Waffe im Arsenal mit permanenten Upgrades für Schaden, Magazin und Feuerrate. Kein Rückstoß-Upgrade.</div>'+rows.map(r=>{const lv=dwolfUpgrades[r[1]]||0;const max=lv>=10;const cost=dwolfUpgradeCost(r[1]);return `<div class="upgradeRow"><div><div class="upgradeName">${r[0]}</div><div style="font-size:9px;color:#748187">${r[3]}</div></div><div class="upgradeLevel">LV ${lv}/10 · ${r[2]}</div><button ${max||credits<cost?'disabled':''} onclick="upgradeDWolf('${r[1]}')">${max?'MAX':'$'+cost}</button></div>`}).join('');
+  panel.innerHTML='<h3>🐺 D-WOLF // WAFFEN-UPGRADES</h3><div class="upgradeSub">D-WOLF-Upgrades für Schaden, Magazin und Feuerrate. Weitere gekaufte Waffen haben eigene Upgrades weiter unten. Kein Rückstoß-Upgrade.</div>'+rows.map(r=>{const lv=dwolfUpgrades[r[1]]||0;const max=lv>=10;const cost=dwolfUpgradeCost(r[1]);return `<div class="upgradeRow"><div><div class="upgradeName">${r[0]}</div><div style="font-size:9px;color:#748187">${r[3]}</div></div><div class="upgradeLevel">LV ${lv}/10 · ${r[2]}</div><button ${max||credits<cost?'disabled':''} onclick="upgradeDWolf('${r[1]}')">${max?'MAX':'$'+cost}</button></div>`}).join('');
 }
 
 
@@ -1983,7 +2042,7 @@ const meleeTargetZones={
   STAB:[{n:"BRUST",x:0,y:-52},{n:"BAUCH",x:0,y:-28},{n:"BEIN",x:0,y:2}]
 };
 function getMeleeTarget(weapon,finisher){
-  const zones=meleeTargetZones[weapon]||meleeTargetZones.FAUSTE;
+  const zones=meleeTargetZones[weapon]||meleeTargetZones.SPEER;
   if(finisher&&finisher.target){return finisher.target;}
   return zones[randi(0,zones.length-1)];
 }
@@ -2033,7 +2092,7 @@ function performMeleeAttack(){
   player.shootCd=w.cooldown;
   player.recoil=.08;
   const weapon=player.weapon;
-  const list=meleeFinisherCatalog[weapon]||meleeFinisherCatalog.FAUSTE;
+  const list=meleeFinisherCatalog[weapon]||meleeFinisherCatalog.SPEER;
   let best=null,bestD=Infinity;
   for(const e of enemies){
     if(!e||e.dead||e.portalHidden)continue;
@@ -2048,8 +2107,25 @@ function performMeleeAttack(){
   meleeEffects.push(swing);
   blacklistSfx&&blacklistSfx("hit");
   if(!best)return;
-  const finisher=list[randi(0,list.length-1)];
-  startMeleeFinisher(best,weapon,finisher);
+  /* Nahkampf ist KEIN One-Shot: erst normalen Waffenschaden anwenden.
+     Der Schaden entspricht dem aktuell ausgerüsteten D-WOLF (inkl. Upgrades).
+     Der Finisher startet nur, wenn der Gegner dadurch wirklich stirbt. */
+  const damage=w.damage;
+  best.hp=Math.max(0,(best.hp||0)-damage);
+  best.hitFlash=.16;
+  best.flash=.16;
+  best.stagger=Math.max(best.stagger||0,.18);
+  best.knockback=(player.dir||1)*Math.min(85,24+damage*.35);
+  best.state="combat";
+  burst(best.x,best.y-48,"blood");
+  for(let k=0;k<3;k++)particles.push({x:best.x,y:best.y-45,vx:rand(-55,55),vy:rand(-65,10),life:.28,type:"spark"});
+
+  if(best.hp<=0){
+    const finisher=list[randi(0,list.length-1)];
+    startMeleeFinisher(best,weapon,finisher);
+  }else{
+    showAlert(weapon+" · HIT · "+Math.round(damage)+" DMG","green");
+  }
 }
 
 function updateMeleeEffects(dt){
@@ -2383,6 +2459,7 @@ function renderShop(){
     const b=document.createElement("button"); b.textContent=equipped?"AUSGERÜSTET":!rankOK?"LEVEL "+w.req:owned?"AUSRÜSTEN":"KAUFEN · $"+w.cost; b.disabled=equipped||!rankOK||(!owned&&credits<w.cost); b.onclick=()=>buyOrEquipWeapon(w.name); card.appendChild(b); grid.appendChild(card);
   });
   renderDWolfUpgrade();
+  renderWeaponUpgrades();
   renderArsenal();
   renderCompanions();
   const og=document.getElementById("outfitGrid"); if(!og)return; og.innerHTML="";
@@ -2774,7 +2851,7 @@ function setupLevel(id){
     Ziel
   */
 
-  if(m[5]==="target"){
+  if(!zombieMode && m[5]==="target"){
 
     target={
       x:world.width-850,
@@ -2881,6 +2958,62 @@ function newGame(){
 }
 
 /* =========================================================
+   ZOMBIE MODE
+========================================================= */
+function spawnZombieWave(){
+  if(!zombieMode||!gameRunning)return;
+  zombieWave++; zombieIntermission=0; enemies=[]; pendingEnemies=[];
+  const count=Math.min(60,5+zombieWave*3), hpScale=1+(zombieWave-1)*.12, speedScale=1+(zombieWave-1)*.035;
+  const screenLeft=camera.x;
+  const screenRight=camera.x+W;
+  for(let i=0;i<count;i++){
+    const side=i%2===0?1:-1;
+    /* Zombies are created outside the visible screen and immediately start walking in.
+       This is ONLY used by Zombie Mode; normal missions keep their existing spawn system. */
+    let x=side>0 ? screenRight+rand(140,520) : screenLeft-rand(140,520);
+    if(x<90)x=Math.min(world.width-90,screenRight+rand(80,260));
+    if(x>world.width-90)x=Math.max(90,screenLeft-rand(80,260));
+    const y=clamp(rand(398,495),385,505), heavy=zombieWave>=4&&Math.random()<Math.min(.22,.06+zombieWave*.01);
+    enemies.push({x,y,homeY:y,vy:0,walking:true,walkPhase:rand(0,6.28),homeX:x,dir:player.x>x?1:-1,
+      hp:Math.round((heavy?150:90)*hpScale),maxHp:Math.round((heavy?150:90)*hpScale),type:heavy?"heavy":"zombie",weapon:"NONE",
+      state:"combat",alert:2,contactDelay:0,lastSeenX:player.x,lastSeenY:player.y,vision:9999,shoot:999,patrol:0,flash:0,
+      hitbox:{head:13,body:30,legs:22,overall:32},dead:false,zombie:true,zombieSpeed:speedScale,weaponDropped:false});
+  }
+  showAlert("☣ ZOMBIE-WELLE "+zombieWave+" · "+count+" FEINDE","red");
+  radio("Zombie Modus. Welle "+zombieWave+" beginnt. Die Zombies kommen von außerhalb.",true);
+}
+function setupZombieMode(){
+  currentLevel=0; zombieMode=true; zombieWave=0; zombieKills=0; zombieIntermission=0;
+  world.width=6200; target=null; extractX=world.width-280;
+  player={x:world.width/2,y:430,vx:0,vy:0,dir:1,walking:false,walkPhase:0,recoil:0,muzzle:0,weapon:equippedWeapon,outfit:equippedOutfit,aimX:1,aimY:0,hp:100,maxHp:100,ammo:30,reserve:150,shootCd:0,reload:0,camo:0,inv:0};
+  const equipped=weaponCatalog[player.weapon]; player.ammo=equipped.mag; player.reserve=equipped.reserve;
+  companion={id:equippedCompanion,x:player.x-58,y:player.y+24,attackCd:0,anim:0};
+  enemies=[];pendingEnemies=[];bullets=[];enemyBullets=[];particles=[];props=[];camera.x=Math.max(0,player.x-W*.45);
+  spawnZombieWave();
+}
+function startZombieMode(){
+  playerDeath={active:false,time:0};
+  const ds=document.getElementById("deathScreen");if(ds)ds.style.display="none";
+  document.getElementById("missionScreen").style.display="none";document.getElementById("menu").style.display="none";
+  document.getElementById("hud").style.display="block";document.getElementById("mobileControls").style.display="block";document.getElementById("crosshair").style.display="block";
+  gameRunning=true;paused=false;won=false;setupZombieMode();
+  showCutscene("☣ ZOMBIE MODUS","Überlebe endlose Wellen. Zombies greifen dich im Nahkampf an.\n\nWELLE "+zombieWave+" · KILLS "+zombieKills,()=>{});
+}
+function updateZombieEnemy(e,dt){
+  /* Zombie-Tote benutzen exakt dieselbe Gelenk-Ragdoll-Physik wie normale Missionen.
+     Die Zombie-KI wird nach dem Tod nicht mehr ausgeführt, die Physik aber weiter. */
+  if(e.dead){
+    if(e.ragdoll && !e.portalizing) updateRagdoll(e,dt);
+    return;
+  }
+  const speed=(58+(zombieWave-1)*3)*(e.zombieSpeed||1),dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;
+  e.dir=dx>=0?1:-1;
+  if(d>42){e.x+=(dx/d)*speed*dt;e.y+=clamp(dy,-55,55)/55*speed*.55*dt;e.walking=true;e.walkPhase+=dt*7;}
+  else{e.walking=false;e.attackCd=(e.attackCd||0)-dt;if(e.attackCd<=0&&player.inv<=0){const dmg=e.type==="heavy"?14:8;player.hp=Math.max(0,player.hp-dmg);player.inv=.25;e.attackCd=.9;camera.shake=5;burst(player.x,player.y-45,"blood");showAlert("ZOMBIE-ANGRIFF · -"+dmg+" HP","red");if(player.hp<=0)loseGame();}}
+  e.x=clamp(e.x,80,world.width-80);e.y=clamp(e.y,385,505);
+}
+
+/* =========================================================
    START
 ========================================================= */
 
@@ -2907,6 +3040,7 @@ function activateVisibleEnemies(){
 }
 
 function startGame(id=0){
+  zombieMode=false;
   playerDeath={active:false,time:0};
   const ds=document.getElementById("deathScreen"); if(ds)ds.style.display="none";
 
@@ -3000,6 +3134,19 @@ function showMissions(){
     }
   );
 
+  let zb=document.getElementById("zombieModeButton");
+  if(!zb){
+    zb=document.createElement("button");
+    zb.id="zombieModeButton";
+    zb.style.marginTop="14px";
+    zb.style.borderColor="#6f9b67";
+    zb.style.color="#b7e4a9";
+    zb.style.background="linear-gradient(135deg,#111a13,#070b08)";
+    zb.onclick=startZombieMode;
+    grid.parentNode.insertBefore(zb,grid.nextSibling);
+  }
+  zb.textContent="☣ ZOMBIE MODUS · WELLE 1–∞ · BEST "+zombieBestWave;
+
   document
     .getElementById(
       "missionScreen"
@@ -3043,6 +3190,7 @@ function resumeGame(){
 }
 
 function backMenu(){
+  zombieMode=false;
 
   gameRunning=false;
   cutscene.active=false;
@@ -3255,6 +3403,7 @@ function lineOfSight(e){
 ========================================================= */
 
 function updateEnemy(e,dt){
+  if(e.zombie){updateZombieEnemy(e,dt);return;}
 
   /* Tote Gegner durchlaufen eine kurze, sichtbare Todesanimation:
      erst Knie/Absacken, danach zufällig nach vorne oder hinten umfallen. */
@@ -3591,6 +3740,7 @@ function update(dt){
 
 
   updateCompanion(dt);
+  if(zombieMode&&zombieIntermission>0){zombieIntermission-=dt;if(zombieIntermission<=0)spawnZombieWave();}
 
   /*
     Zielen
@@ -3702,8 +3852,8 @@ function update(dt){
            Die Spezialmunition ist bewusst ein eigener Kill-Typ und hängt nicht von
            der normalen Waffen-Schadensberechnung ab. */
         if(b.specialType && ownedSpecialAmmo.includes(b.specialType) && !e.specialEffectStarted){
-          /* Spezialmunition ist ein eigener Kill-Pfad. Sie wird nur einmal ausgelöst. */
-          e.hp=0;
+          /* Spezialmunition ist nur der Kill-Effekt. Der Schaden bleibt 100 % der eingesetzten Waffe.
+             Sie kann niemals selbst einen One-Shot erzwingen. */
           e.specialType=b.specialType;
         }
         e.hitFlash=headshot?.18:.10;
@@ -3737,13 +3887,24 @@ e.dead=true;
           e.fall=0;
           e.fallAngle=(Math.random()<.5?-1:1)*(1.25+Math.random()*.22);
           e.deathDir=Math.random()<.5?-1:1;
-          e.weaponDropped=true;
+          e.weaponDropped=e.zombie?false:true;
           e.specialType=b.specialType||e.specialType||"";
           if(e.specialType)specialKillStart(e.specialType,e);
           else initRagdoll(e);
+          if(e.zombie){
+            e.zombieDead=true;
+            e.zombieCorpseGreen=true;
+            if(e.ragdoll){
+              for(const q of Object.values(e.ragdoll.pts)){
+                q.vx+=(b.vx>0?1:-1)*18;
+                q.vy-=12;
+              }
+            }
+          }
           e.knockback=(b.vx>0?1:-1)*85;
           awardCredits(e.type==="heavy"?90:55);
           awardXP(e.type==="heavy"?120:65);
+          if(zombieMode&&e.zombie)zombieKills++;
           // Kill-Bonus direkt auf dem Spieler: +5 HP und +10 Schuss.
           player.hp=Math.min(player.maxHp||100,(player.hp||0)+5);
           const killBonusWeapon=getWeapon();
@@ -3953,6 +4114,12 @@ e.dead=true;
 
 function checkObjective(){
 
+  if(zombieMode){
+    const alive=enemies.filter(e=>!e.dead).length+pendingEnemies.length;
+    if(alive===0&&zombieIntermission<=0){zombieIntermission=2;zombieBestWave=Math.max(zombieBestWave,zombieWave);localStorage.setItem("blacklistZombieBestWave",zombieBestWave);awardCredits(80+zombieWave*15);awardXP(90+zombieWave*20);}
+    return;
+  }
+
   const m=
     missions[currentLevel];
 
@@ -4028,7 +4195,7 @@ function loseGame(){
   document.getElementById("deathRetry").onclick=()=>{
     document.getElementById("deathScreen").style.display="none";
     playerDeath={active:false,time:0};
-    startGame(currentLevel);
+    zombieMode?startZombieMode():startGame(currentLevel);
   };
   document.getElementById("deathMenu").onclick=()=>{
     document.getElementById("deathScreen").style.display="none";
@@ -4048,10 +4215,7 @@ function updateHUD(){
   const m=
     missions[currentLevel];
 
-  document.getElementById(
-    "missionText"
-  ).textContent=
-    m[0]+" · "+m[1];
+  if(zombieMode){document.getElementById("missionText").textContent="☣ ZOMBIE MODUS · WELLE "+zombieWave;}else{document.getElementById("missionText").textContent=m[0]+" · "+m[1];}
 
   const enemyCount =
     enemies.filter(e=>!e.dead).length +
@@ -4075,11 +4239,10 @@ function updateHUD(){
   if(rank)rank.textContent=`LVL ${lvl} · ${getRankName(lvl)}`;
 
 
-  let objective=
-    m[3];
+  let objective=zombieMode?"Überlebe Welle "+zombieWave+" · Zombies: "+enemyCount+" · Kills: "+zombieKills:m[3];
 
 
-  if(m[5]==="clear"){
+  if(!zombieMode && m[5]==="clear"){
 
     objective=
       "Gegner: "+
@@ -4089,7 +4252,7 @@ function updateHUD(){
   }
 
 
-  if(m[5]==="reach"){
+  if(!zombieMode && m[5]==="reach"){
 
     objective=
       "Extraktion: "+
@@ -5420,9 +5583,13 @@ function drawDeadEnemy(e,x,progress){
   const hx1=P.hipR.x-camera.x, hy1=P.hipR.y;
 
   /* Rump als echtes Gelenkviereck */
-  ctx.fillStyle="#202729";
+  const zombieCorpse=!!e.zombie;
+  const cloth=zombieCorpse?"#214a2a":"#202729";
+  const dark=zombieCorpse?"#0c2413":"#111517";
+  const skin=zombieCorpse?"#57a64f":"#b58f78";
+  ctx.fillStyle=cloth;
   ctx.beginPath();ctx.moveTo(sx0,sy0);ctx.lineTo(sx1,sy1);ctx.lineTo(hx1,hy1);ctx.lineTo(hx0,hy0);ctx.closePath();ctx.fill();
-  ctx.strokeStyle="#111517";ctx.lineWidth=5;ctx.stroke();
+  ctx.strokeStyle=dark;ctx.lineWidth=5;ctx.stroke();
 
   function bone(a,b,w,col){
     const A=P[a],B=P[b];ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(A.x-camera.x,A.y);ctx.lineTo(B.x-camera.x,B.y);ctx.stroke();
@@ -5430,25 +5597,31 @@ function drawDeadEnemy(e,x,progress){
   function joint(n,radius,col){const q=P[n];ctx.fillStyle=col;ctx.beginPath();ctx.arc(q.x-camera.x,q.y,radius,0,Math.PI*2);ctx.fill();}
 
   /* Arme: Oberarm + Unterarm */
-  bone("shL","elL",11,"#15191b"); bone("elL","handL",7,"#b58f78");
-  bone("shR","elR",11,"#15191b"); bone("elR","handR",7,"#b58f78");
+  bone("shL","elL",11,dark); bone("elL","handL",7,skin);
+  bone("shR","elR",11,dark); bone("elR","handR",7,skin);
   /* Beine: Oberschenkel + Unterschenkel */
-  bone("hipL","kneeL",13,"#202729"); bone("kneeL","footL",9,"#111517");
-  bone("hipR","kneeR",13,"#202729"); bone("kneeR","footR",9,"#111517");
+  bone("hipL","kneeL",13,cloth); bone("kneeL","footL",9,dark);
+  bone("hipR","kneeR",13,cloth); bone("kneeR","footR",9,dark);
 
   /* Gelenke */
-  ["shL","shR","elL","elR","hipL","hipR","kneeL","kneeR"].forEach(n=>joint(n,5,"#202729"));
-  ["handL","handR"].forEach(n=>joint(n,4,"#b58f78"));
+  ["shL","shR","elL","elR","hipL","hipR","kneeL","kneeR"].forEach(n=>joint(n,5,cloth));
+  ["handL","handR"].forEach(n=>joint(n,4,skin));
 
   /* Hals + Kopf */
-  bone("neck","head",8,"#b58f78");
-  joint("neck",6,"#b58f78");
+  bone("neck","head",8,skin);
+  joint("neck",6,skin);
   const h=P.head;
-  ctx.fillStyle="#b58f78";ctx.beginPath();ctx.arc(h.x-camera.x,h.y,14,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#0a0d0e";ctx.beginPath();ctx.arc(h.x-camera.x,h.y-5,15,Math.PI,Math.PI*2);ctx.fill();
+  ctx.fillStyle=skin;ctx.beginPath();ctx.arc(h.x-camera.x,h.y,14,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=zombieCorpse?"#163c1d":"#0a0d0e";ctx.beginPath();ctx.arc(h.x-camera.x,h.y-5,15,Math.PI,Math.PI*2);ctx.fill();
+  if(zombieCorpse){
+    ctx.globalAlpha*=.72;
+    ctx.fillStyle="#83ff63";ctx.beginPath();ctx.arc(h.x-camera.x-5,h.y-2,2.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(h.x-camera.x+5,h.y-2,2.5,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha/=.72;
+  }
 
   /* Schulter-/Hüftgurt für mehr Körperlesbarkeit */
-  ctx.strokeStyle="#111517";ctx.lineWidth=5;
+  ctx.strokeStyle=dark;ctx.lineWidth=5;
   ctx.beginPath();ctx.moveTo(sx0,sy0);ctx.lineTo(sx1,sy1);ctx.stroke();
   ctx.beginPath();ctx.moveTo(hx0,hy0);ctx.lineTo(hx1,hy1);ctx.stroke();
 
@@ -5496,8 +5669,9 @@ function drawActors(){
     */
 
     if(
-      e.state==="alert" ||
-      e.state==="combat"
+      !e.dead &&
+      (e.state==="alert" ||
+      e.state==="combat")
     ){
 
       const red=
@@ -5553,7 +5727,8 @@ function drawActors(){
         ctx.restore();
         ctx.save();ctx.fillStyle="#ff4b54";ctx.font="900 10px Arial";ctx.textAlign="center";ctx.fillText(e.bossName,x,e.y-154);ctx.restore();
       }else{
-        drawHuman(x,e.y,e.dir,true,false,e.walkPhase,e.walking,e.weapon||"PISTOLE",e.flash);
+        drawHuman(x,e.y,e.dir,true,false,e.walkPhase,e.walking,e.zombie?"NONE":(e.weapon||"PISTOLE"),e.flash);
+        if(e.zombie){ctx.save();ctx.translate(x,e.y);ctx.fillStyle="rgba(74,150,72,.20)";ctx.beginPath();ctx.ellipse(0,-54,24,47,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ff3344";ctx.shadowBlur=8;ctx.shadowColor="#ff3344";ctx.fillRect(-9,-96,5,3);ctx.fillRect(4,-96,5,3);ctx.shadowBlur=0;ctx.strokeStyle="#6ca55e";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-11,-74);ctx.lineTo(-18,-64);ctx.moveTo(12,-70);ctx.lineTo(20,-58);ctx.stroke();ctx.restore();}
       }
     }
     ctx.restore();
@@ -5575,6 +5750,7 @@ function drawActors(){
     */
 
     if(
+      !e.dead &&
       e.hp<e.maxHp &&
       e.x>=camera.x-10 &&
       e.x<=camera.x+W+10
