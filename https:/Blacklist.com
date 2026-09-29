@@ -488,8 +488,71 @@ button{
   opacity:0;
 }
 
+
 /* =========================
-   LANDSCAPE NOTICE
+   AUTO DEVICE / SCREEN PROFILE
+========================= */
+:root{
+  --ui-scale:1;
+  --control-scale:1;
+  --hud-pad:8px;
+}
+
+body[data-device="desktop"] #mobileControls{display:none !important}
+body[data-device="desktop"] #rotateNotice{display:none !important}
+
+body[data-device="phone"] .box,
+body[data-device="tablet"] .box{
+  padding:calc(6px * var(--ui-scale)) calc(9px * var(--ui-scale));
+}
+
+body[data-device="phone"] .value{font-size:calc(11px * var(--ui-scale))}
+body[data-device="tablet"] .value{font-size:calc(12px * var(--ui-scale))}
+
+body[data-device="phone"] .stickArea,
+body[data-device="phone"] .stickBase{
+  width:calc(122px * var(--control-scale));
+  height:calc(122px * var(--control-scale));
+}
+body[data-device="phone"] .stick{
+  width:calc(54px * var(--control-scale));
+  height:calc(54px * var(--control-scale));
+  left:calc(34px * var(--control-scale));
+  top:calc(34px * var(--control-scale));
+}
+body[data-device="tablet"] .stickArea,
+body[data-device="tablet"] .stickBase{
+  width:calc(138px * var(--control-scale));
+  height:calc(138px * var(--control-scale));
+}
+body[data-device="tablet"] .stick{
+  width:calc(58px * var(--control-scale));
+  height:calc(58px * var(--control-scale));
+  left:calc(40px * var(--control-scale));
+  top:calc(40px * var(--control-scale));
+}
+body[data-device="phone"] #fireButton{
+  width:calc(78px * var(--control-scale));
+  height:calc(78px * var(--control-scale));
+}
+body[data-device="phone"] #reloadButton{
+  width:calc(68px * var(--control-scale));
+  height:calc(68px * var(--control-scale));
+}
+body[data-device="tablet"] #fireButton{
+  width:calc(88px * var(--control-scale));
+  height:calc(88px * var(--control-scale));
+}
+
+@media (max-width:700px){
+  body[data-device="phone"] .hud{gap:3px;overflow:hidden}
+  body[data-device="phone"] #hud{padding:4px}
+  body[data-device="phone"] .box{min-width:52px}
+  body[data-device="phone"] .box.big{min-width:0}
+}
+
+/* =========================
+   LANDSCAPE-ONLY NOTICE
 ========================= */
 
 #rotateNotice{
@@ -509,6 +572,7 @@ button{
   #rotateNotice{
     display:flex;
   }
+  body[data-device="desktop"] #rotateNotice{display:none !important}
 }
 
 @media (orientation:landscape) and (max-height:520px){
@@ -1071,36 +1135,87 @@ const canvas =
 const ctx =
   canvas.getContext("2d");
 
-let W =
-  innerWidth;
+let W=innerWidth;
+let H=innerHeight;
+let DPR=Math.min(devicePixelRatio || 1,2);
 
-let H =
-  innerHeight;
+function getViewportSize(){
+  const vv=window.visualViewport;
+  return {
+    w:Math.max(1,Math.round(vv?.width || window.innerWidth)),
+    h:Math.max(1,Math.round(vv?.height || window.innerHeight))
+  };
+}
 
-let DPR =
-  Math.min(devicePixelRatio || 1,2);
+function detectDeviceProfile(){
+  const vw=W, vh=H;
+  const short=Math.min(vw,vh);
+  const long=Math.max(vw,vh);
+  const touchPoints=navigator.maxTouchPoints||0;
+  const coarse=matchMedia("(pointer:coarse)").matches;
+  const touch=touchPoints>0 || "ontouchstart" in window || coarse;
+  const iPadOS=/Macintosh/i.test(navigator.userAgent) && touchPoints>1;
+  const phone=touch && (short<=600 || /Android.*Mobile|iPhone|iPod/i.test(navigator.userAgent));
+  const tablet=touch && !phone && (iPadOS || short<=1100 || /iPad|Android/i.test(navigator.userAgent));
+  const device=phone?"phone":tablet?"tablet":"desktop";
+
+  document.body.dataset.device=device;
+  document.body.dataset.orientation=vw>=vh?"landscape":"portrait";
+  document.body.dataset.touch=touch?"yes":"no";
+
+  // UI scale follows the actual viewport instead of a fixed device assumption.
+  let uiScale=1, controlScale=1;
+  if(device==="phone") uiScale=Math.max(.78,Math.min(1,short/480));
+  else if(device==="tablet") uiScale=Math.max(.88,Math.min(1.05,short/768));
+
+  if(device==="phone") controlScale=Math.max(.82,Math.min(1.05,short/430));
+  else if(device==="tablet") controlScale=Math.max(.9,Math.min(1.08,short/760));
+
+  document.documentElement.style.setProperty("--ui-scale",uiScale.toFixed(3));
+  document.documentElement.style.setProperty("--control-scale",controlScale.toFixed(3));
+
+  const rotateNotice=document.getElementById("rotateNotice");
+  if(rotateNotice){
+    const needsLandscape=device!=="desktop" && vh>vw;
+    rotateNotice.style.display=needsLandscape?"flex":"none";
+  }
+}
+
+async function requestLandscapeLock(){
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      await screen.orientation.lock("landscape");
+    }
+  }catch(e){
+    // iOS Safari and some browsers do not allow programmatic orientation locks.
+  }
+}
+
+// Best effort: keep action gameplay in landscape. If the browser refuses the lock,
+// the rotate overlay still prevents portrait play on phones/tablets.
+requestLandscapeLock();
 
 function resize(){
+  const vp=getViewportSize();
+  W=vp.w;
+  H=vp.h;
+  DPR=Math.min(window.devicePixelRatio || 1,2);
 
-  W=innerWidth;
-  H=innerHeight;
-
-  canvas.width=W*DPR;
-  canvas.height=H*DPR;
-
+  canvas.width=Math.max(1,Math.round(W*DPR));
+  canvas.height=Math.max(1,Math.round(H*DPR));
   canvas.style.width=W+"px";
   canvas.style.height=H+"px";
 
-  ctx.setTransform(
-    DPR,0,0,DPR,0,0
-  );
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  detectDeviceProfile();
 }
 
-addEventListener(
-  "resize",
-  resize
-);
-
+addEventListener("pointerdown",requestLandscapeLock,{once:true,passive:true});
+addEventListener("resize",resize,{passive:true});
+addEventListener("orientationchange",()=>setTimeout(resize,120),{passive:true});
+if(window.visualViewport){
+  visualViewport.addEventListener("resize",resize,{passive:true});
+}
 resize();
 
 
@@ -2661,7 +2776,7 @@ function showCutscene(title,text,callback){
   cutscene.active=true;cutscene.timer=0;cutscene.callback=callback;cutscene.text=text;cutscene.chars=0;cutscene.auto=0;
   document.getElementById("cutsceneTitle").textContent=title;document.getElementById("cutsceneText").textContent="";document.getElementById("cutsceneScreen").style.display="flex";document.getElementById("mobileControls").style.display="none";
 }
-function finishCutscene(){if(!cutscene.active)return;const cb=cutscene.callback;cutscene.active=false;cutscene.callback=null;document.getElementById("cutsceneScreen").style.display="none";if(gameRunning)document.getElementById("mobileControls").style.display="block";if(cb)cb();}
+function finishCutscene(){if(!cutscene.active)return;const cb=cutscene.callback;cutscene.active=false;cutscene.callback=null;document.getElementById("cutsceneScreen").style.display="none";if(gameRunning)document.getElementById("mobileControls").style.display=(document.body.dataset.device==="desktop")?"none":"block";if(cb)cb();}
 document.getElementById("cutsceneSkip").onclick=finishCutscene;
 function updateCutscene(dt){cutscene.timer+=dt;cutscene.chars=Math.min(cutscene.text.length,Math.floor(cutscene.timer*55));document.getElementById("cutsceneText").textContent=cutscene.text.slice(0,cutscene.chars);if(cutscene.chars>=cutscene.text.length){cutscene.auto+=dt;if(cutscene.auto>2.8)finishCutscene();}}
 
@@ -2995,7 +3110,7 @@ function startZombieMode(){
   playerDeath={active:false,time:0};
   const ds=document.getElementById("deathScreen");if(ds)ds.style.display="none";
   document.getElementById("missionScreen").style.display="none";document.getElementById("menu").style.display="none";
-  document.getElementById("hud").style.display="block";document.getElementById("mobileControls").style.display="block";document.getElementById("crosshair").style.display="block";
+  document.getElementById("hud").style.display="block";document.getElementById("mobileControls").style.display=(document.body.dataset.device==="desktop")?"none":"block";document.getElementById("crosshair").style.display="block";
   gameRunning=true;paused=false;won=false;setupZombieMode();
   showCutscene("☣ ZOMBIE MODUS","Überlebe endlose Wellen. Zombies greifen dich im Nahkampf an.\n\nWELLE "+zombieWave+" · KILLS "+zombieKills,()=>{});
 }
@@ -3056,9 +3171,8 @@ function startGame(id=0){
     .getElementById("hud")
     .style.display="block";
 
-  document
-    .getElementById("mobileControls")
-    .style.display="block";
+  const controls=document.getElementById("mobileControls");
+  controls.style.display=(document.body.dataset.device==="desktop")?"none":"block";
 
   document
     .getElementById("crosshair")
@@ -3074,7 +3188,7 @@ function startGame(id=0){
   showCutscene(
     "LEVEL "+missions[id][0]+" · "+missions[id][1],
     levelStartTexts[id]+"\n\nZIEL: "+missions[id][3]+". Gelb bedeutet Verdacht, Rot bedeutet bestätigten Sichtkontakt.",
-    ()=>{document.getElementById("mobileControls").style.display="block";}
+    ()=>{document.getElementById("mobileControls").style.display=(document.body.dataset.device==="desktop")?"none":"block";}
   );
 }
 
