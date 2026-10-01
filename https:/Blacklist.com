@@ -3177,19 +3177,45 @@ function shoot(){
   if(player.ammo<=0){reload();return;}
   player.ammo--; player.shootCd=w.cooldown; player.recoil=.12; player.muzzle=.07;
 
-  /* ZERO-AIM: exakt auf die aktuelle Zielrichtung, ohne Zufalls-Spread. */
-  const len=Math.hypot(player.aimX,player.aimY)||1;
-  const ax=player.aimX/len, ay=player.aimY/len;
-  const angle=Math.atan2(ay,ax);
-  const muzzle=getWeaponMuzzle(player.weapon);
+  /* AIM-LOCK: Die Kugel fliegt vom echten Mündungspunkt
+     exakt zum Mittelpunkt des Fadenkreuzes. */
+  const aimLen=Math.hypot(player.aimX,player.aimY)||1;
+  const ax=player.aimX/aimLen, ay=player.aimY/aimLen;
 
-  /* Projektilstartpunkt = echte Waffenmündung, mit Zielwinkel gedreht. */
-  const mx=player.x+muzzle.x*Math.cos(angle)-muzzle.y*Math.sin(angle);
-  const my=player.y+muzzle.x*Math.sin(angle)+muzzle.y*Math.cos(angle);
+  /* Waffenmündung:
+     Die Waffe sitzt bei y-54. Der Lauf zeigt entlang der Aim-Richtung. */
+  const muzzle=getWeaponMuzzle(player.weapon);
+  const muzzleBaseX=player.x+15;
+  const muzzleBaseY=player.y-54;
+  const mx=muzzleBaseX+ax*muzzle.x;
+  const my=muzzleBaseY+ay*muzzle.x;
+
+  /* Das Ziel wird direkt aus dem Fadenkreuz gelesen.
+     Da Canvas und Fadenkreuz beide viewport-fixed sind, ist die
+     Umrechnung 1:1; camera.x wird nur auf die Welt-X-Koordinate addiert. */
+  const cross=document.getElementById("crosshair");
+  let targetX=player.x+ax*600;
+  let targetY=(player.y-54)+ay*600;
+
+  if(cross){
+    const cr=cross.getBoundingClientRect();
+    const cx=cr.left+cr.width/2;
+    const cy=cr.top+cr.height/2;
+    if(Number.isFinite(cx)&&Number.isFinite(cy)){
+      targetX=camera.x+cx;
+      targetY=cy;
+    }
+  }
+
+  const dx=targetX-mx;
+  const dy=targetY-my;
+  const distance=Math.hypot(dx,dy)||1;
+  const vx=dx/distance*w.speed;
+  const vy=dy/distance*w.speed;
 
   for(let i=0;i<w.pellets;i++){
     blacklistSfx&&blacklistSfx("shoot");
-    bullets.push({x:mx,y:my,vx:Math.cos(angle)*w.speed,vy:Math.sin(angle)*w.speed,life:1.15,damage:w.damage,explosive:w.explosive||0,shock:!!w.shock,railgun:!!w.railgun,specialType:(selectedSpecialAmmo&&ownedSpecialAmmo.includes(selectedSpecialAmmo))?selectedSpecialAmmo:""});
+    bullets.push({x:mx,y:my,vx,vy,life:1.15,damage:w.damage,explosive:w.explosive||0,shock:!!w.shock,railgun:!!w.railgun,specialType:(selectedSpecialAmmo&&ownedSpecialAmmo.includes(selectedSpecialAmmo))?selectedSpecialAmmo:""});
   }
   flash=.07;
   for(let i=0;i<(w.pellets>1?10:5);i++)particles.push({x:mx,y:my,vx:rand(-80,80)+ax*rand(30,130),vy:rand(-80,80)+ay*rand(30,130),life:.25,type:"spark"});
@@ -5715,7 +5741,7 @@ function drawActors(){
     const muzzle=getWeaponMuzzle(player.weapon);
     const aimLen=Math.hypot(player.aimX,player.aimY)||1;
     const ax=player.aimX/aimLen, ay=player.aimY/aimLen;
-    const x=player.x-camera.x+muzzle.x*ax;
+    const x=player.x-camera.x+15+muzzle.x*ax;
     const y=player.y-54+muzzle.x*ay;
 
     ctx.fillStyle=
@@ -6059,8 +6085,8 @@ function moveCrosshair(){
   }
 
   const px=player.x-camera.x;
-  const py=player.y-42;
-  const distance=Math.min(300,Math.max(170,W*.26));
+  const py=player.y-54;
+  const distance=Math.min(360,Math.max(220,W*.32));
   cross.style.left=(px+player.aimX*distance)+"px";
   cross.style.top=(py+player.aimY*distance)+"px";
 }
